@@ -5,13 +5,35 @@ import { CurrentWeather } from '@/components/CurrentWeather';
 import { WeeklyForecast } from '@/components/WeeklyForecast';
 import { ViewToggle } from '@/components/ViewToggle';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
 const Index = () => {
-  const { weatherData, loading, error, refetch } = useWeatherData();
+  const { weatherData, loading, error, locationError, refetch } = useWeatherData();
   const [viewMode, setViewMode] = useState<'current' | 'weekly'>('current');
 
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  if (locationError && !weatherData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Location Access Denied</AlertTitle>
+          <AlertDescription>
+            <p>This application requires access to your location to provide weather data. Please enable location services in your browser settings and refresh the page.</p>
+            <button
+              onClick={refetch}
+              className="mt-4 px-4 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg transition-all duration-300"
+            >
+              Retry
+            </button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   if (!weatherData) {
