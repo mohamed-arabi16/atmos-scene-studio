@@ -2,41 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* AtmoSphere Design System - Weather-themed cinematic experience
+All colors MUST be HSL for consistency and theming support.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Base atmospheric colors */
+    --background: 220 25% 6%;
+    --foreground: 220 15% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Glass-morphism cards */
+    --card: 220 25% 8%;
+    --card-foreground: 220 15% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Popover elements */
+    --popover: 220 25% 8%;
+    --popover-foreground: 220 15% 95%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Weather-themed primary (sky blue) */
+    --primary: 200 80% 60%;
+    --primary-foreground: 220 25% 6%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Subtle secondary (cloud gray) */
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 220 15% 85%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted atmospheric tones */
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent (warm sunset) */
+    --accent: 35 85% 65%;
+    --accent-foreground: 220 25% 6%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Weather alerts (storm red) */
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 220 15% 95%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Subtle borders and inputs */
+    --border: 220 15% 20%;
+    --input: 220 15% 15%;
+    --ring: 200 80% 60%;
 
-    --radius: 0.5rem;
+    /* Atmospheric gradients */
+    --gradient-sky: linear-gradient(135deg, hsl(200 80% 60%), hsl(220 70% 45%));
+    --gradient-sunset: linear-gradient(135deg, hsl(35 85% 65%), hsl(15 90% 55%));
+    --gradient-storm: linear-gradient(135deg, hsl(220 25% 15%), hsl(240 30% 8%));
+    --gradient-night: linear-gradient(135deg, hsl(220 25% 6%), hsl(240 30% 12%));
+
+    /* Weather effects */
+    --rain-color: 200 60% 70%;
+    --cloud-color: 220 15% 85%;
+    --sun-color: 45 95% 70%;
+    --wind-color: 180 40% 60%;
+
+    /* Smooth transitions */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +125,73 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-hidden;
   }
+}
+
+/* Weather Animation Utilities */
+@layer utilities {
+  .weather-card {
+    @apply bg-card/20 backdrop-blur-lg border border-white/10 rounded-2xl;
+  }
+  
+  .weather-text {
+    @apply text-foreground/90 tracking-wide;
+  }
+  
+  .temperature-display {
+    @apply text-6xl font-thin tracking-tighter text-foreground;
+  }
+  
+  .gradient-sky {
+    background: var(--gradient-sky);
+  }
+  
+  .gradient-sunset {
+    background: var(--gradient-sunset);
+  }
+  
+  .gradient-storm {
+    background: var(--gradient-storm);
+  }
+  
+  .gradient-night {
+    background: var(--gradient-night);
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-drift {
+    animation: drift 20s linear infinite;
+  }
+  
+  .animate-rain {
+    animation: rain 1s linear infinite;
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes drift {
+  0% { transform: translateX(-100px); }
+  100% { transform: translateX(calc(100vw + 100px)); }
+}
+
+@keyframes rain {
+  0% { transform: translateY(-100vh) translateX(0px); }
+  100% { transform: translateY(100vh) translateX(-50px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
 }
