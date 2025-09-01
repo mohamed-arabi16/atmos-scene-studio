@@ -1,17 +1,16 @@
-// This is a server-side API route for fetching weather data
-// Note: In a real Vite/React app, this would typically be handled by a backend
-// For now, we'll create a mock API that can be replaced with actual server implementation
+// src/api/weather.ts
+// Real implementation using OpenWeatherMap
 
-interface WeatherApiResponse {
+export interface WeatherApiResponse {
   location: string;
-  temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
-  description: string;
-  icon: string;
+  temperature: number;    // °C
+  condition: string;      // 'clear' | 'cloudy' | 'rain' | ...
+  humidity: number;       // %
+  windSpeed: number;      // km/h
+  description: string;    // e.g., 'light rain'
+  icon: string;           // openweather icon code
   forecast?: Array<{
-    day: string;
+    day: string;          // e.g., 'Today', 'Tomorrow', 'Wednesday'
     high: number;
     low: number;
     condition: string;
@@ -19,113 +18,121 @@ interface WeatherApiResponse {
   }>;
 }
 
-// Mock weather data generator based on location
-export const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherApiResponse> => {
-  // In a real implementation, this would use the OPENWEATHER_API_KEY secret
-  // and make actual API calls to OpenWeatherMap
-  
-  // For demo purposes, we'll generate realistic mock data
-  const conditions = ['clear', 'partly-cloudy', 'cloudy', 'rain', 'snow'];
-  const currentCondition = conditions[Math.floor(Math.random() * conditions.length)];
-  
-  const cities = [
-    'New York, NY',
-    'Los Angeles, CA',
-    'Chicago, IL',
-    'Houston, TX',
-    'Phoenix, AZ',
-    'Philadelphia, PA',
-    'San Antonio, TX',
-    'San Diego, CA',
-    'Dallas, TX',
-    'San Jose, CA'
-  ];
-  
-  const baseTemp = 15 + Math.random() * 20; // 15-35°C
-  const humidity = 40 + Math.random() * 40; // 40-80%
-  const windSpeed = 5 + Math.random() * 25; // 5-30 km/h
-  
-  const descriptions = {
-    'clear': 'Clear skies with gentle breeze',
-    'partly-cloudy': 'Partly cloudy with mild conditions', 
-    'cloudy': 'Overcast with cool temperatures',
-    'rain': 'Light showers throughout the day',
-    'snow': 'Snow flurries and cold conditions'
-  };
-
-  // Generate 5-day forecast
-  const days = ['Today', 'Tomorrow', 'Wednesday', 'Thursday', 'Friday'];
-  const forecast = days.map((day, index) => {
-    const dayCondition = conditions[Math.floor(Math.random() * conditions.length)];
-    const variation = (Math.random() - 0.5) * 10; // ±5°C variation
-    
-    return {
-      day,
-      high: Math.round(baseTemp + variation + Math.random() * 5),
-      low: Math.round(baseTemp + variation - Math.random() * 8),
-      condition: dayCondition,
-      icon: '01d' // Simplified for demo
-    };
-  });
-
-  return {
-    location: cities[Math.floor(Math.random() * cities.length)],
-    temperature: Math.round(baseTemp),
-    condition: currentCondition,
-    humidity: Math.round(humidity),
-    windSpeed: Math.round(windSpeed),
-    description: descriptions[currentCondition as keyof typeof descriptions],
-    icon: '01d',
-    forecast
-  };
+type OWCurrent = {
+  name: string;
+  sys: { country: string };
+  main: { temp: number; humidity: number };
+  weather: { main: string; description: string; icon: string }[];
+  wind: { speed: number }; // m/s
 };
 
-// For actual implementation with OpenWeatherMap API:
-/*
-export const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherApiResponse> => {
-  const API_KEY = process.env.OPENWEATHER_API_KEY;
-  
-  try {
-    // Current weather
-    const currentResponse = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-    );
-    const currentData = await currentResponse.json();
-    
-    // 5-day forecast
-    const forecastResponse = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-    );
-    const forecastData = await forecastResponse.json();
-    
-    // Process and return formatted data
-    return {
-      location: `${currentData.name}, ${currentData.sys.country}`,
-      temperature: Math.round(currentData.main.temp),
-      condition: mapWeatherCondition(currentData.weather[0].main.toLowerCase()),
-      humidity: currentData.main.humidity,
-      windSpeed: Math.round(currentData.wind.speed * 3.6), // m/s to km/h
-      description: currentData.weather[0].description,
-      icon: currentData.weather[0].icon,
-      forecast: processForecastData(forecastData.list)
-    };
-  } catch (error) {
-    console.error('Weather API error:', error);
-    throw error;
-  }
+type OWForecastListItem = {
+  dt_txt: string; // "YYYY-MM-DD HH:mm:ss"
+  main: { temp_min: number; temp_max: number };
+  weather: { main: string; icon: string }[];
 };
+
+type OWForecast = { list: OWForecastListItem[] };
 
 const mapWeatherCondition = (condition: string): string => {
-  const conditionMap: Record<string, string> = {
-    'clear': 'clear',
-    'clouds': 'cloudy',
-    'rain': 'rain',
-    'drizzle': 'rain',
-    'thunderstorm': 'thunderstorm',
-    'snow': 'snow',
-    'mist': 'cloudy',
-    'fog': 'cloudy'
+  const c = condition.toLowerCase();
+  const map: Record<string, string> = {
+    clear: 'clear',
+    clouds: 'cloudy',
+    rain: 'rain',
+    drizzle: 'rain',
+    thunderstorm: 'thunderstorm',
+    snow: 'snow',
+    mist: 'cloudy',
+    fog: 'cloudy',
+    haze: 'cloudy',
+    smoke: 'cloudy',
+    dust: 'cloudy',
+    sand: 'cloudy',
+    ash: 'cloudy',
+    squall: 'rain',
+    tornado: 'thunderstorm',
   };
-  return conditionMap[condition] || 'clear';
+  return map[c] || 'clear';
 };
-*/
+
+const dayLabel = (index: number, dateStr: string): string => {
+  if (index === 0) return 'Today';
+  if (index === 1) return 'Tomorrow';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(undefined, { weekday: 'long' });
+};
+
+// Aggregate OpenWeather 3-hour forecast into daily highs/lows and a representative condition/icon
+const processForecast = (ow: OWForecast): WeatherApiResponse['forecast'] => {
+  const byDate: Record<
+    string,
+    { highs: number[]; lows: number[]; icons: string[]; mains: string[]; firstDt: string }
+  > = {};
+
+  for (const item of ow.list) {
+    const date = item.dt_txt.split(' ')[0]; // YYYY-MM-DD
+    byDate[date] ??= { highs: [], lows: [], icons: [], mains: [], firstDt: item.dt_txt };
+    byDate[date].highs.push(item.main.temp_max);
+    byDate[date].lows.push(item.main.temp_min);
+    byDate[date].icons.push(item.weather[0]?.icon || '01d');
+    byDate[date].mains.push(item.weather[0]?.main || 'Clear');
+  }
+
+  const dates = Object.keys(byDate).sort();
+  const next5 = dates.slice(0, 5);
+
+  return next5.map((dateStr, i) => {
+    const bucket = byDate[dateStr];
+    const high = Math.round(Math.max(...bucket.highs));
+    const low = Math.round(Math.min(...bucket.lows));
+    // pick approx midday (fallback to first)
+    const icon = bucket.icons[Math.floor(bucket.icons.length / 2)] || bucket.icons[0] || '01d';
+    const main = bucket.mains[Math.floor(bucket.mains.length / 2)] || bucket.mains[0] || 'Clear';
+
+    return {
+      day: dayLabel(i, bucket.firstDt),
+      high,
+      low,
+      condition: mapWeatherCondition(main),
+      icon,
+    };
+  });
+};
+
+export const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherApiResponse> => {
+  const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY as string;
+  if (!API_KEY) throw new Error('Missing VITE_OPENWEATHER_API_KEY');
+
+  const base = 'https://api.openweathermap.org/data/2.5';
+
+  // Current weather
+  const currentRes = await fetch(
+    `${base}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+  );
+  if (!currentRes.ok) throw new Error(`OpenWeather current failed: ${currentRes.status}`);
+  const current = (await currentRes.json()) as OWCurrent;
+
+  // 5-day / 3-hour forecast
+  const forecastRes = await fetch(
+    `${base}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+  );
+  if (!forecastRes.ok) throw new Error(`OpenWeather forecast failed: ${forecastRes.status}`);
+  const forecast = (await forecastRes.json()) as OWForecast;
+
+  const mainCond = current.weather[0]?.main || 'Clear';
+  const condition = mapWeatherCondition(mainCond);
+  const city = current.name || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+  const country = current.sys?.country ? `, ${current.sys.country}` : '';
+
+  return {
+    location: `${city}${country}`,
+    temperature: Math.round(current.main.temp),
+    condition,
+    humidity: current.main.humidity,
+    windSpeed: Math.round((current.wind?.speed || 0) * 3.6), // m/s → km/h
+    description: current.weather[0]?.description || condition,
+    icon: current.weather[0]?.icon || '01d',
+    forecast: processForecast(forecast),
+  };
+};

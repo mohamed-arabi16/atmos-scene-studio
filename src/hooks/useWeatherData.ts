@@ -63,14 +63,22 @@ export const useWeatherData = (): UseWeatherDataReturn => {
     } catch (err: any) {
       console.error('Weather fetch error:', err);
 
-      if (err.message.includes('Geolocation')) {
-        setError('Unable to retrieve location. Please enable location services in your browser.');
+      // Geolocation permission denial codes:
+      // - err.code === 1 (PERMISSION_DENIED) in GeolocationPositionError
+      // - err.name === 'NotAllowedError' (Chrome)
+      const isGeoDenied =
+        err?.code === 1 ||
+        err?.name === 'NotAllowedError' ||
+        (typeof err?.message === 'string' && err.message.toLowerCase().includes('geolocation'));
+
+      if (isGeoDenied) {
+        setError('Location permission denied. Please enable location and retry.');
         setLocationError(true);
       } else {
         setError('Unable to load weather data');
       }
-      
-      // Fallback to demo data
+
+      // Optional demo fallback (keep if you want a nice UX when offline/denied)
       setWeatherData({
         location: 'San Francisco, CA',
         temperature: 22,
@@ -85,7 +93,7 @@ export const useWeatherData = (): UseWeatherDataReturn => {
           { day: 'Wednesday', high: 23, low: 17, condition: 'cloudy', icon: '03d' },
           { day: 'Thursday', high: 21, low: 16, condition: 'rain', icon: '09d' },
           { day: 'Friday', high: 25, low: 20, condition: 'clear', icon: '01d' },
-        ]
+        ],
       });
     } finally {
       setLoading(false);
